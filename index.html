@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>상대방의 감정 카드 맞히기</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #f0f4f8;
+    }
+    header {
+      padding: 20px;
+      background: #4a90e2;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.8rem;
+      line-height: 1.2;
+    }
+    header .script {
+      display: inline-block;
+      text-align: left;
+      font-size: 2.2rem;
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+    .container {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .left, .right {
+      padding: 20px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .left {
+      flex: 1;
+      background: #ffffff;
+      box-shadow: inset -2px 0 4px rgba(0,0,0,0.1);
+    }
+    .right {
+      flex: 1.2;
+      background: #fafafa;
+      width: 100%;
+    }
+    .left img {
+      width: 80%;
+      max-height: 60vh;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .left button {
+      margin-top: 20px;
+      padding: 20px 40px;
+      font-size: 1.4rem;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .left button:disabled {
+      background: #a0c4f2;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .left button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .stats {
+      display: flex;
+      justify-content: flex-start;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+    .stats span {
+      font-size: 2.2rem;
+      font-weight: bold;
+    }
+    .grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto auto;
+      gap: 10px;
+      width: 100%;
+      align-items: start;
+    }
+    .img-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .img-container img {
+      width: 64%;
+      height: auto;
+      object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.2s, filter 0.3s;
+      border-radius: 10px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .img-container img:hover {
+      transform: translateY(-4px);
+    }
+    .img-container img.selected {
+      filter: blur(4px) grayscale(50%);
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    .img-container button.audioBtn {
+      margin-top: 5px;
+      background: transparent;
+      border: none;
+      font-size: 2.25rem;
+      cursor: pointer;
+    }
+    /* 분홍박스 위치: 가운데 하단 셀 */
+    .total-box {
+      grid-column: 2;
+      grid-row: 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .total-box div {
+      background: #e94e77;
+      color: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      font-size: 3rem;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .bottom {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .bottom button {
+      padding: 20px 40px;
+      font-size: 1.4rem;
+      background: #7ed321;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .bottom button:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .img-container img { width: 80%; }
+      /* 분홍박스 중앙 정렬 유지 */
+      .total-box { grid-column: 1 / -1; grid-row: 4; margin-top: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>상대방의 감정 카드 맞히기</h1>
+    <div class="script">
+      <div>A: Don't ________</div>
+      <div>B: Okay. or Sorry. / No.</div>
+    </div>
+  </header>
+  <div class="container">
+    <div class="left">
+      <img id="currentImage" src="" alt="이번 라운드 이미지" />
+      <button id="drawBtn">뽑기</button>
+    </div>
+    <div class="right">
+      <div class="stats">
+        <span>이번 라운드 점수: <strong id="roundScore">10</strong></span>
+      </div>
+      <div class="grid" id="imageGrid"></div>
+      <div class="total-box">
+        <div id="totalScoreBox">0점</div>
+      </div>
+      <div class="bottom">
+        <button id="successBtn">성공</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const items = [
+      {img: 'images/dont_drink.png', text: "Don't drink"},
+      {img: 'images/dont_eat.png', text: "Don't eat"},
+      {img: 'images/dont_enter.png', text: "Don't enter"},
+      {img: 'images/dont_kick.png', text: "Don't kick"},
+      {img: 'images/dont_push.png', text: "Don't push"},
+      {img: 'images/dont_swim.png', text: "Don't swim"},
+      {img: 'images/dont_talk.png', text: "Don't talk"},
+      {img: 'images/dont_touch.png', text: "Don't touch"}
+    ];
+    let totalScore = 0;
+    let clickable = true, drawClickable = true;
+    const currentImageEl = document.getElementById('currentImage');
+    const roundScoreEl = document.getElementById('roundScore');
+    const totalScoreBox = document.getElementById('totalScoreBox');
+    const drawBtn = document.getElementById('drawBtn');
+    const successBtn = document.getElementById('successBtn');
+    const gridEl = document.getElementById('imageGrid');
+
+    function updateRoundScore() {
+      const count = document.querySelectorAll('.img-container img.selected').length;
+      return Math.max(0, 10 - (count - 1));
+    }
+
+    function refreshRoundScore() {
+      roundScoreEl.textContent = updateRoundScore();
+    }
+
+    function initGrid() {
+      gridEl.innerHTML = '';
+      items.forEach((item, idx) => {
+        const container = document.createElement('div');
+        container.className = 'img-container';
+        const img = document.createElement('img');
+        img.src = item.img;
+        img.dataset.index = idx;
+        img.addEventListener('click', onSelectImage);
+        container.appendChild(img);
+        const btn = document.createElement('button');
+        btn.className = 'audioBtn';
+        btn.innerHTML = '🔊';
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const utter = new SpeechSynthesisUtterance(item.text);
+          utter.lang = 'en-US';
+          speechSynthesis.speak(utter);
+        });
+        container.appendChild(btn);
+        gridEl.appendChild(container);
+      });
+    }
+
+    function onSelectImage(e) {
+      if (!clickable) return;
+      const img = e.currentTarget;
+      if (img.classList.contains('selected')) return;
+      img.classList.add('selected');
+      setTimeout(() => clickable = true, 2000);
+      clickable = false;
+      refreshRoundScore();
+    }
+
+    function drawRandomImage() {
+      const idx = Math.floor(Math.random() * items.length);
+      currentImageEl.src = items[idx].img;
+      // 초기화
+      document.querySelectorAll('.img-container img.selected')
+        .forEach(img => img.classList.remove('selected'));
+      roundScoreEl.textContent = '10';
+    }
+
+    drawBtn.addEventListener('click', () => {
+      if (!drawClickable) return;
+      drawRandomImage();
+      drawClickable = false;
+      drawBtn.disabled = true;
+      setTimeout(() => { drawClickable = true; drawBtn.disabled = false; }, 30000);
+    });
+
+    successBtn.addEventListener('click', () => {
+      const score = updateRoundScore();
+      totalScore += score;
+      totalScoreBox.textContent = totalScore + '점';
+      // 초기화
+      document.querySelectorAll('.img-container img.selected')
+        .forEach(img => img.classList.remove('selected'));
+      roundScoreEl.textContent = '10';
+    });
+
+    window.addEventListener('DOMContentLoaded', () => { initGrid(); drawRandomImage(); });
+  </script>
+</body>
+</html>
